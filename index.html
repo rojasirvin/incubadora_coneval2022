@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Evaluación Experimental</title>
+    <meta charset="utf-8" />
+    <meta name="date" content="2022-03-13" />
+    <script src="libs/header-attrs-2.11/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <script src="libs/kePrint-0.0.1/kePrint.js"></script>
+    <link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap-grid.min.css" type="text/css" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" type="text/css" />
+    <link rel="stylesheet" href="https://cdn.rawgit.com/jpswalsh/academicons/master/css/academicons.min.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+
+class: title-slide, inverse, center, middle
+
+
+
+&lt;style type="text/css"&gt;
+.huge .remark-code { /*Change made here*/
+  font-size: 200% !important;
+}
+.tiny .remark-code { /*Change made here*/
+  font-size: 60% !important;
+}
+&lt;/style&gt;
+
+.title[
+# Evaluación Experimental
+]
+.subtitle[
+### Una aplicación del Proyecto Esperanza en Oaxaca
+]
+&lt;br/&gt;
+
+.author[
+### Irvin Rojas &lt;br&gt; [rojasirvin.com](https://www.rojasirvin.com/) &lt;br&gt; [&lt;i class="fab fa-github"&gt;&lt;/i&gt;](https://github.com/rojasirvin) [&lt;i class="fab fa-twitter"&gt;&lt;/i&gt;](https://twitter.com/RojasIrvin) [&lt;i class="ai ai-google-scholar"&gt;&lt;/i&gt;](https://scholar.google.com/citations?user=FUwdSTMAAAAJ&amp;hl=en)
+]
+
+&lt;br/&gt;
+
+.affiliation[
+### Centro de Investigación y Docencia Económicas &lt;br&gt; División de Economía  &lt;br&gt;  &lt;br&gt; Actualización: 2022-03-13
+]
+
+---
+
+# Paquetes que usaremos
+
+- *tidyverse*: manejo de datos
+- *haven*: leer datos de múltiples formatos
+- *sandwich*: estimación de errores robustos y agrupados
+- *modelsummary*: presentar resultados en tablas
+- *ri2*: realizar inferencia por aleatorización
+
+---
+# Descripción de variables
+
+
+```r
+data &lt;- haven::read_dta("data/analysis_dataset.dta")
+```
+
+---
+# Descripción de variables
+
+Consideremos la variable **age**, que indica la educación de la socia en años
+
+Usando los datos de la línea base sabemos que la edad promedio de las socias es de 7.62 años
+
+
+```r
+bl &lt;- data %&gt;% 
+  filter(t==0)
+
+summary(bl$educ)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    0.00    6.00    9.00    7.62    9.00   21.00       3
+```
+---
+
+# El balance
+
+Para estimar de forma consistente el efecto del tratamiento debe suceder que la asignación al tratamiento sea independiente de las características de las socias en la línea base
+
+Veamos la media de la edad de quienes recibieron y no recibieron el tratamiento
+
+
+```r
+#Por grupos
+bl %&gt;% 
+  group_by(hopegroup) %&gt;%
+  summarize(mean=mean(educ,na.rm=T)) %&gt;% 
+  ungroup()
+```
+
+```
+## # A tibble: 2 x 2
+##   hopegroup  mean
+##       &lt;dbl&gt; &lt;dbl&gt;
+## 1         0  7.31
+## 2         1  7.87
+```
+
+---
+
+# El balance
+
+Hacemos una prueba de diferencia de medias
+
+Planteamos una hipótesis nula `\(H0: educ_{tratadas}=educ_{no tratadas}\)`
+
+Construimos un estadístico `\(t\)` y formulamos una regla de decisión
+
+Si `\(p&lt;\alpha=0.05\)` rechazamos la `\(H_0\)`
+
+
+```r
+t.test(educ ~ hopegroup,
+       data = bl)
+```
+
+```
+## 
+## 	Welch Two Sample t-test
+## 
+## data:  educ by hopegroup
+## t = -1.5771, df = 533.39, p-value = 0.1154
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -1.2465200  0.1363455
+## sample estimates:
+## mean in group 0 mean in group 1 
+##        7.313765        7.868852
+```
+
+
+---
+
+# El balance
+
+Podemos hacer uso de una regresión lineal para hacer exactamente lo mismo
+
+`$$educ_i=\gamma_0 + \gamma_1 tratamiento_i + e_i$$`
+
+
+```r
+summary(m1 &lt;- lm(educ ~ hopegroup,
+   data = bl))$coef
+```
+
+```
+##              Estimate Std. Error   t value      Pr(&gt;|t|)
+## (Intercept) 7.3137652  0.2626090 27.850402 3.798815e-107
+## hopegroup   0.5550873  0.3532882  1.571202  1.167107e-01
+```
+
+---
+
+# El balance
+
+Sin embargo, la prueba realizada anteriormente asume que los errores son independientes e idénticamente distribuidos (iid)
+
+En otras palabras, que los individuos en nuestra muestra reciben choques aleatorios que no están correlacionados
+
+Esto no sucede en nuestro caso: tenemos socias que son parte de grupos de crédito y ahorro y que, por tanto, reciben choques que están correlacionados (mercado laboral, clima, programas)
+
+Debemos tomar en cuenta que estos errores no son independientes para estimar correctamente la matriz de varianzas de `\(\hat{\beta}\)`
+
+---
+
+# El balance
+
+La función *lm_robust* funciona como *lm* pero podemos especificar errores agrupados
+
+
+```r
+summary(m1r &lt;- lm_robust(educ ~ hopegroup,
+                         clusters = communitybank,
+                         se_type = "CR0",
+                         data = bl))$coef
+```
+
+```
+##              Estimate Std. Error   t value     Pr(&gt;|t|)
+## (Intercept) 7.3137652  0.4519871 16.181358 9.897799e-22
+## hopegroup   0.5550873  0.5958180  0.931639 3.559126e-01
+##               CI Lower CI Upper DF
+## (Intercept)  6.4063632 8.221167 51
+## hopegroup   -0.6410673 1.751242 51
+```
+---
+
+# El balance
+
+En una evaluación, tenemos que verificar el supuesto de independencia al mostrar evidencia de que las características de los individuos **antes** de la intervención no difieren entre tratados y no tratados
+
+Estimo una regresión para cada características usando la especificación que usé antes para la educación
+
+Guardo los resultados en una lista llamada *models*
+
+
+```r
+#Para el resto de los covariables
+models &lt;- list()
+
+models[['Edad']] &lt;- lm_robust(age ~ hopegroup,
+                                   clusters = communitybank,
+                                   se_type = "CR0",
+                                   data = bl)
+
+models[['Educación']] &lt;- lm_robust(educ ~ hopegroup,
+                         clusters = communitybank,
+                         se_type = "CR0",
+                         data = bl)
+```
+
+
+
+---
+
+# El balance
+
+Puedo presentar los resultados de estimar la misma especificación para varias características usando *modelsummary*
+
+
+```r
+modelsummary::modelsummary(models,
+                           statistic = "std.error",
+                           coef_map = c('hopegroup' = "Hope Group"),
+                           coef_omit = "Intercept",
+                           gof_omit = 'DF|Deviance|R2|AIC|BIC',
+                           stars=c('*' = .1, '**' = .05, '***'=0.01),
+                           title = "Balance de X en línea base")
+```
+---
+
+# El balance
+
+&lt;table style="NAborder-bottom: 0; width: auto !important; margin-left: auto; margin-right: auto;" class="table"&gt;
+&lt;caption&gt;Balance de X en línea base&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt;   &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Edad &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Educación &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Prop. evangélica &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Hijos &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Líder &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Hope Group &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 2.624* &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.555 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; -0.068 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.109 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; -0.024 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;box-shadow: 0px 1px"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;box-shadow: 0px 1px"&gt; (1.343) &lt;/td&gt;
+   &lt;td style="text-align:center;box-shadow: 0px 1px"&gt; (0.596) &lt;/td&gt;
+   &lt;td style="text-align:center;box-shadow: 0px 1px"&gt; (0.062) &lt;/td&gt;
+   &lt;td style="text-align:center;box-shadow: 0px 1px"&gt; (0.216) &lt;/td&gt;
+   &lt;td style="text-align:center;box-shadow: 0px 1px"&gt; (0.028) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Num.Obs. &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 552 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 552 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 555 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 552 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 552 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Std.Errors &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; by: communitybank &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; by: communitybank &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; by: communitybank &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; by: communitybank &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; by: communitybank &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tfoot&gt;&lt;tr&gt;&lt;td style="padding: 0; " colspan="100%"&gt;
+&lt;sup&gt;&lt;/sup&gt; * p &amp;lt; 0.1, ** p &amp;lt; 0.05, *** p &amp;lt; 0.01&lt;/td&gt;&lt;/tr&gt;&lt;/tfoot&gt;
+&lt;/table&gt;
+
+---
+
+# El efecto del tratamiento
+
+Si el supuesto de independencia se cumple, el efecto del tratamiento en una variable `\(y\)` puede ser identificado simplmente al comparar `\(y\)` para tratados y no tratados **después de la intervención**
+
+Sabemos que podemos hacer esto con una regresión como sigue
+
+`$$y_i=\beta_0+\beta_1 tratamiento + \varepsilon_i$$`
+
+donde `\(\hat{\beta_1}\)` es el efecto del tratamiento
+
+Estimemos el efecto de haber sido asignado a la intervención del Proyecto Esperanza sobre un índice de agencia, **StdAnderAgencyIndex** usando los datos recabados un año después del tratamiento
+
+---
+
+# El efecto del tratamiento
+
+Primero estimemos una regresión con errores robustos (ignorando errores agrupados)
+
+
+```r
+summary(e0a &lt;- lm_robust(StdAnderAgencyIndex ~ hopegroup,
+                        se_type = "HC1",
+                        data = filter(data, t==2)))$coef[,c(1:2,4)]
+```
+
+```
+##                Estimate Std. Error   Pr(&gt;|t|)
+## (Intercept) -0.03987771 0.05810099 0.49270936
+## hopegroup    0.14335812 0.07427787 0.05399089
+```
+
+El tratamiento tiene un efecto positivo de 0.14 `\(\sigma\)` en el índice de agencia
+
+Este efecto es estadísticamente significativo (0.054)
+
+---
+
+# El efecto del tratamiento
+
+Notemos qué pasa cuando agregamos un vector de *controles*
+
+Es común en evaluación estimar una *regresión larga*
+
+`$$y_i=\beta_0+\beta_1 tratamiento + BX_i +  \varepsilon_i$$`
+
+donde `\(X_i\)` representa un vector de características que explican `\(y_i\)`, pero que no fueron afectadas por el tratamiento
+
+
+```r
+summary(e0b &lt;- lm_robust(StdAnderAgencyIndex ~ hopegroup + age + educ + evangelical + children + children_under_18 + bankleader + Dwelling_Index,
+                        se_type = "HC1",
+                        data = filter(data, t==2)))$coef[,c(1:2,4)]
+```
+
+```
+##                       Estimate  Std. Error     Pr(&gt;|t|)
+## (Intercept)       -0.340442156 0.223814020 1.286735e-01
+## hopegroup          0.121110189 0.072245686 9.409890e-02
+## age               -0.004713444 0.004039764 2.436911e-01
+## educ               0.052790209 0.010526488 6.679275e-07
+## evangelical        0.379279118 0.108837467 5.221633e-04
+## children           0.019006709 0.022062497 3.892516e-01
+## children_under_18 -0.008965712 0.038218195 8.145912e-01
+## bankleader         0.010256296 0.086152056 9.052698e-01
+## Dwelling_Index     0.113103281 0.035957419 1.726092e-03
+```
+---
+
+# El efecto del tratamiento
+
+Primero hagamos más corto lo que tenemos que escribir
+
+
+```r
+X &lt;- c("hopegroup", "age", "educ", "evangelical", "children", "children_under_18", "bankleader", "Dwelling_Index")
+
+reglarga &lt;- as.formula(paste("StdAnderAgencyIndex ~ ",
+                             paste(X, collapse= "+")))
+
+reglarga
+```
+
+```
+## StdAnderAgencyIndex ~ hopegroup + age + educ + evangelical + 
+##     children + children_under_18 + bankleader + Dwelling_Index
+```
+---
+
+# El efecto del tratamiento
+
+Podemos sustituir *reglarga* en la parte donde va la especificación de la regresión
+
+
+```r
+summary(e1 &lt;- lm_robust(reglarga,
+                        clusters = communitybank,
+                        se_type = "CR0",
+                        data = filter(data, t==2)))$coef[,c(1:2,4)]
+```
+
+```
+##                       Estimate  Std. Error     Pr(&gt;|t|)
+## (Intercept)       -0.340442156 0.247397168 0.1748048522
+## hopegroup          0.121110189 0.100738665 0.2348301184
+## age               -0.004713444 0.004440473 0.2934756911
+## educ               0.052790209 0.015033895 0.0009424004
+## evangelical        0.379279118 0.102989999 0.0005580598
+## children           0.019006709 0.023918992 0.4305121292
+## children_under_18 -0.008965712 0.031760457 0.7788623462
+## bankleader         0.010256296 0.090064321 0.9097820572
+## Dwelling_Index     0.113103281 0.036513645 0.0031697242
+```
+---
+
+# El efecto del tratamiento
+
+Recordemos que la aleatorización ocurrió por parejas,
+entonces debemos incluir efectos fijos por parejas para comparar entre socias de grupos comparables
+
+
+
+```r
+summary(e2 &lt;- lm_robust(reglarga,
+                        fixed_effects = pair_number,
+                        clusters = communitybank,
+                        se_type = "CR0",
+                        data = filter(data, t==2)))$coef[,c(1:2,4)]
+```
+
+```
+##                       Estimate  Std. Error     Pr(&gt;|t|)
+## hopegroup          0.143526819 0.068752972 4.185097e-02
+## age               -0.005845114 0.004119949 1.620589e-01
+## educ               0.048547114 0.014213789 1.257003e-03
+## evangelical        0.405534882 0.094371384 7.784492e-05
+## children           0.030766628 0.023788554 2.017220e-01
+## children_under_18 -0.002832854 0.031416715 9.285051e-01
+## bankleader         0.030245102 0.083902040 7.199761e-01
+## Dwelling_Index     0.095691839 0.032842866 5.292069e-03
+```
+
+---
+
+# El efecto del tratamiento
+
+Comparamos las estimaciones que hemos hecho hasta ahora
+
+
+```r
+modelsummary::modelsummary(list('Errores Robustos'=e0a,
+                                'Errores Robustos + X'=e0b,
+                                'Errores agrupados + X'=e1,
+                                'Errores agrupados + X + parejas'=e2),
+                           statistic = "std.error",
+                           coef_map = c('hopegroup' = "Hope Group"),
+                           coef_omit = "Intercept",
+                           gof_omit = 'DF|Deviance|R2|AIC|BIC',
+                           stars=c('*' = .1, '**' = .05, '***'=0.01),
+                           title = "Efectos de tratamiento en el índice de agencia 12 meses después de la intervención")
+```
+
+---
+
+# El efecto del tratamiento
+
+&lt;table style="NAborder-bottom: 0; width: auto !important; margin-left: auto; margin-right: auto;" class="table"&gt;
+&lt;caption&gt;Efectos de tratamiento en el índice de agencia 12 meses después de la intervención&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt;   &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Errores Robustos &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Errores Robustos + X &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Errores agrupados + X &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Errores agrupados + X + parejas &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Hope Group &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.143* &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.121* &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.121 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.144** &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;box-shadow: 0px 1px"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;box-shadow: 0px 1px"&gt; (0.074) &lt;/td&gt;
+   &lt;td style="text-align:center;box-shadow: 0px 1px"&gt; (0.072) &lt;/td&gt;
+   &lt;td style="text-align:center;box-shadow: 0px 1px"&gt; (0.101) &lt;/td&gt;
+   &lt;td style="text-align:center;box-shadow: 0px 1px"&gt; (0.069) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Num.Obs. &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 732 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 732 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 732 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 732 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Std.Errors &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; HC1 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; HC1 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; by: communitybank &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; by: communitybank &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tfoot&gt;&lt;tr&gt;&lt;td style="padding: 0; " colspan="100%"&gt;
+&lt;sup&gt;&lt;/sup&gt; * p &amp;lt; 0.1, ** p &amp;lt; 0.05, *** p &amp;lt; 0.01&lt;/td&gt;&lt;/tr&gt;&lt;/tfoot&gt;
+&lt;/table&gt;
+
+---
+
+# ANCOVA
+
+Introducimos el valor en la línea base del índice de agencia y un indicador de si dicho valor no fue colectado en la línea base
+
+
+```r
+X &lt;- c("hopegroup", "age", "educ", "evangelical", "children", "children_under_18", "bankleader", "Dwelling_Index", "Baseline_StdAnderAgencyIndex", "M_Baseline_StdAnderAgencyIndex")
+
+reglarga &lt;- as.formula(paste("StdAnderAgencyIndex ~ ",
+                             paste(X, collapse= "+")))
+
+summary(e3 &lt;- lm_robust(reglarga,
+                        fixed_effects = pair_number,
+                        clusters = communitybank,
+                        se_type = "CR0",
+                        data = filter(data, t==2)))$coef[,c(1:2,4)]
+```
+
+---
+
+# El efecto del tratamiento
+
+&lt;table style="NAborder-bottom: 0; width: auto !important; margin-left: auto; margin-right: auto;" class="table"&gt;
+&lt;caption&gt;Efectos de tratamiento en el índice de agencia 12 meses después de la intervención&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt;   &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Errores Robustos &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Errores Robustos + X &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Errores agrupados + X &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; Errores agrupados + X + parejas &lt;/th&gt;
+   &lt;th style="text-align:center;"&gt; + ANCOVA &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Hope Group &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.143* &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.121* &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.121 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.144** &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 0.161** &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;box-shadow: 0px 1px"&gt;  &lt;/td&gt;
+   &lt;td style="text-align:center;box-shadow: 0px 1px"&gt; (0.074) &lt;/td&gt;
+   &lt;td style="text-align:center;box-shadow: 0px 1px"&gt; (0.072) &lt;/td&gt;
+   &lt;td style="text-align:center;box-shadow: 0px 1px"&gt; (0.101) &lt;/td&gt;
+   &lt;td style="text-align:center;box-shadow: 0px 1px"&gt; (0.069) &lt;/td&gt;
+   &lt;td style="text-align:center;box-shadow: 0px 1px"&gt; (0.061) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Num.Obs. &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 732 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 732 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 732 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 732 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; 732 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Std.Errors &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; HC1 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; HC1 &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; by: communitybank &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; by: communitybank &lt;/td&gt;
+   &lt;td style="text-align:center;"&gt; by: communitybank &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tfoot&gt;&lt;tr&gt;&lt;td style="padding: 0; " colspan="100%"&gt;
+&lt;sup&gt;&lt;/sup&gt; * p &amp;lt; 0.1, ** p &amp;lt; 0.05, *** p &amp;lt; 0.01&lt;/td&gt;&lt;/tr&gt;&lt;/tfoot&gt;
+&lt;/table&gt;
+
+---
+
+# Inferencia por aleatorización
+
+Declaramos la estructura del experimento
+
+- Clusters: bancos
+- Bloques: parejas
+
+Usamos los datos del seguimiento de un año
+
+.pull-left[
+
+
+```r
+df &lt;- filter(data, t==2)
+
+declaration &lt;- 
+  with(df,{
+    declare_ra(
+      blocks = pair_number, # bloques = parejas
+      clusters = id_g, # clusters o grupos = bancos
+      )
+  })
+```
+]
+
+.pull-right[
+
+```r
+declaration
+```
+
+```
+## Random assignment procedure: Blocked and clustered random assignment 
+## Number of units: 732 
+## Number of blocks: 26
+## Number of clusters: 52
+## Number of treatment arms: 2 
+## The possible treatment categories are 0 and 1.
+## The number of possible random assignments is 67108864.  
+## The probabilities of assignment are constant across units: 
+## prob_0 prob_1 
+##    0.5    0.5
+```
+]
+---
+
+# Inferencia por aleatorización
+
+.pull-left[
+
+```r
+ri &lt;- conduct_ri(
+  StdAnderAgencyIndex ~ hopegroup,
+  assignment = "hopegroup",
+  sharp_hypothesis = 0,
+  declaration = declaration,
+  data = df,
+  sims = 1000
+)
+```
+]
+
+.pull-rigth[
+
+```r
+summary(ri)
+```
+
+```
+##        term  estimate two_tailed_p_value
+## 1 hopegroup 0.1433581              0.193
+```
+]
+
+---
+
+# Inferencia por aleatorización
+
+Agregamos controles
+
+.pull-left[
+
+```r
+ri &lt;- conduct_ri(
+  StdAnderAgencyIndex ~ hopegroup +
+  age + educ + evangelical + children + children_under_18 + bankleader + Dwelling_Index +
+  factor(pair_number) +
+  Baseline_StdAnderAgencyIndex +
+  M_Baseline_StdAnderAgencyIndex,
+  assignment = "hopegroup",
+  sharp_hypothesis = 0,
+  declaration = declaration,
+  data = df,
+  sims = 1000
+)
+```
+]
+
+.pull-rigth[
+
+```r
+summary(ri)
+```
+
+```
+##        term  estimate two_tailed_p_value
+## 1 hopegroup 0.1612457              0.092
+```
+]
+
+
+---
+
+class: center, middle, inverse
+
+# ¡Gracias!
+
+.author[
+### [rojasirvin.com](https://www.rojasirvin.com/) &lt;br&gt; [&lt;i class="fab fa-github"&gt;&lt;/i&gt;](https://github.com/rojasirvin) [&lt;i class="fab fa-twitter"&gt;&lt;/i&gt;](https://twitter.com/RojasIrvin) [&lt;i class="ai ai-google-scholar"&gt;&lt;/i&gt;](https://scholar.google.com/citations?user=FUwdSTMAAAAJ&amp;hl=en)
+]
+
+&lt;br/&gt;
+
+
+(Esta presentación está basada en el artículo [*Les hizo justicia la revolución*](http://rioarriba.mx/articulo.php?iden=les-hizo-justicia-la-revolucion).)
+
+&lt;br/&gt;
+
+&lt;br/&gt;
+
+
+Presentación creada usando el paquete [**xaringan**](https://github.com/yihui/xaringan) en R.
+
+El chakra viene de [remark.js](https://remarkjs.com), [**knitr**](https://yihui.org/knitr/), y [R Markdown](https://rmarkdown.rstudio.com).
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

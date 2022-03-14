@@ -263,7 +263,7 @@ modelsummary::modelsummary(list('Agencia'=e3,
 
 
 #4. Inferencia por aleatorización----
-set.seet(322)
+set.seed(322)
 
 #Datos de follow-up 2
 df <- filter(data, t==2)

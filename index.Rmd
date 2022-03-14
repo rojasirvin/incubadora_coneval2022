@@ -61,27 +61,400 @@ xfun::pkg_load2(c('base64enc', 'htmltools', 'mime'))
 ### Centro de Investigación y Docencia Económicas <br> División de Economía  <br>  <br> Actualización: `r Sys.Date()`
 ]
 
+
+
+---
+
+.center[
+```{r}
+knitr::include_graphics("intro.png")
+``` 
+]
+
+---
+
+# Agenda
+
+1. Formulación de la hipótesis
+
+1. Diseño e implementación del estudio
+
+1. Metodología
+
+1. Resultados
+
+1. Ejercicio de replicación
+
+1. Reflexiones finales
+
+
+
+---
+
+class: inverse, middle, center
+
+# 1. Formulación de la hipótesis
+
+---
+
+# La esperanza importa
+
+Banerjee et al. (2015): las microfinanzas pueden funcionar para algunos, pero no para todos
+
+Duflo (2012): la esperanza importa
+
+Multiples lecciones de la economía del comportamiento
+
+- Sistemas duales
+- Puntos de referencia y aversión a la pérdida
+- Carencia de auto control
+- Normas
+
+En esta presentación hablaré sobre un estudio basado en estas ideas
+
+Rojas, Wydick and Lybbert (2021), [Can hope elevate microfinance? Evidence from Oaxaca, Mexico]((https://academic.oup.com/oep/article/74/1/236/6154385?login=true)), *Oxford Economic Papers*
+
+---
+
+# Un modelo de la esperanza
+
+Concepto de esperanza de la teoría de Snyder (1993)
+
+- Aspiraciones
+
+- Avenidas
+
+- Habilidades
+
+Diferencia a la esperanza *deseosa* de la **esperanza aspiracional**
+
+Operacionalizamos estos conceptos en un modelo microeconómico
+
+- Aspiraciones: modeladas con una función de utilidad que depende de un punto de referencia (aspiración)
+
+- Avenidas: modeladas con una función de producción con restricciones
+
+- Habilidad: modelada con la productividad marginal del esfuerzo
+
+Ver [Wydick y Lybbert (2018)](https://www.journals.uchicago.edu/doi/full/10.1086/696968)
+
+---
+
+# Modelo microeconómico
+
+El problema de cada individuo es
+
+$$\max_{\{e_{t}\}} U_{t+1}=E(u_{t+1})-c(e_t)$$
+Sujeto a
+
+$Y_{t+1}=\pi e_t  + \pi_{\nu} \nu_{t+1}$
+
+
+$E(Y_{t+1})= \begin{cases} \pi e_t, & \text{si } e_t < \bar{e} \\ \bar{Y}, & \text{si } e_t \geq \bar{e} \\ \end{cases}$
+
+$u=A\left(\frac{Y}{A}\right)^\frac{1}{1-\alpha} \mathcal{1}(Y<A) + A\left(\frac{Y}{A}\right)^{1-\alpha} \mathcal{1}(Y\geq A)$
+
+$\pi \bar{e}=\bar{Y}$
+
+
+$\nu_{t+1} \sim \mathcal{N}(0,\,\sigma^{2})$
+
+$\alpha \in[0,\,1]$
+
+
+---
+
+class: inverse, middle, center
+
+# 2. Diseño e implementación del estudio
+
+---
+
+# Proyecto Esperanza en Oaxacca
+
+Colaboración con *Fuentes Libres*, una ONG cristiana
+
+Fuentes opera en el Valle de Oaxaca y en el Istmo de Tehuantepec
+
+En el momento del estudio tenía 52 grupos de ahorro y crédito (*bancos*)
+
+Aleatorizamos un tratamiento en parejas de bancos que tenían características similares
+
+- Localización
+- Oficial de banco
+- Tipos de negocio
+- Tamaño
+- Edad promedio
+
+En cada pareja, un banco es asignado a tratamiento y otro a control
+
+Tratamiento con tres componentes
+---
+
+# Documental *Historias de Esperanza*
+
+.center[
+<iframe width="800" height="470" src="https://www.youtube.com/embed/gAidmWKCCD0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+]
+
+---
+
+# Documental *Historias de Esperanza*
+
+.center[
+```{r}
+knitr::include_graphics("screenshot_doc.jpg")
+``` 
+]
+---
+
+# Ejercicio de fijación de metas
+
+.center[
+```{r}
+knitr::include_graphics("magnet.png")
+``` 
+]
+---
+
+# Mini curso de fijación de conceptos
+
+.center[
+```{r out.width="80%"}
+knitr::include_graphics("curriculum_session.jpg")
+``` 
+]
+
+
+---
+
+# Valle de Oaxaca
+
+.pull-left[
+```{r}
+knitr::include_graphics("http://oaxacahope-project.weebly.com/uploads/8/0/9/9/80995658/groups-map-a-comp_orig.jpg")
+```
+]
+
+.pull-right[
+```{r}
+knitr::include_graphics("http://oaxacahope-project.weebly.com/uploads/8/0/9/9/80995658/groups-map-b-comp_orig.jpg")
+```
+
+]
+
+
+---
+
+# Istmo de Tehuantepec
+
+
+
+.pull-left[
+```{r}
+knitr::include_graphics("http://oaxacahope-project.weebly.com/uploads/8/0/9/9/80995658/groups-map-d-comp_orig.jpg")
+```
+]
+
+.pull-right[
+```{r}
+knitr::include_graphics("http://oaxacahope-project.weebly.com/uploads/8/0/9/9/80995658/groups-map-c-comp_orig.jpg")
+
+knitr::include_graphics("http://oaxacahope-project.weebly.com/uploads/8/0/9/9/80995658/groups-map-e-comp_orig.png")
+```
+
+]
+
+---
+
+# Datos
+
+Se recolecataron datos de cada socia en tres puntos del tiempo
+
+- En la línea base
+- Un mes después de la intervención
+- Un año después de la intervención
+
+Construimos índices de cada una de las dimensiones de la esperanza
+
+Por ejemplo, para el índice de agencia (que usaremos en la replicación), pedimos a cada socia que evaluara del 0 al 10 las siguientes expresiones:
+- ¿Qué tan importante es el trabajo duro para los negocios?
+- ¿Qué tan importante es la suerte para los negocios?
+- Mi futuro está determinado por mis propias acciones y no por las de otros
+- Es difícil para personas como yo ser líderes en la comunidad
+- Mujeres como yo pueden tener un impacto positivo en nuestra comunidad
+
+Recolectamos información sobre los negocios de las socias
+
+Tuvimos acceso a registros administrativos sobre ahorro y crédito
+
+---
+
+class: inverse, middle, center
+
+# 3. Metodología
+
+---
+
+# Integridad del diseño
+
+Para obtener un estimador consistente del efecto del tratamiento se debe cumplir que aquellas socias que recibieron la intervención son estadísticamente iguales a las socias que no la recibieron
+
+Se colectaron las siguientes características en la línea base y se verificó que fueran estadísticamente iguales entre el grupo tratado y el de control
+
+.pull-left[
+**Características predeterminadas**
+- Edad
+- Educación
+- Religió
+- Número de hijos
+- Líder del grupo
+- Tipo de negocio
+]
+
+.pull-right[
+**Variables de resultados**
+- Índice de aspiraciones
+- Índice de agencia
+- Índice de avenidas
+- Felicidad
+- Optimismo
+- Orientación al futuro
+- Aversión al riesgo
+- Horas trabajadas
+- Ventas
+- Ganancias
+- Ahorros
+- Empleados
+
+]
+
+---
+
+# Efecto del tratamiento
+
+Si la aleatorización fue exitosa, el efecto del tratamiento puede obtenerse comparando las variables de resultados entre el grupo de tratamiento y control, usando los datos de seguimiento, un año después de la intervención
+
+Lo anterior puede ser realizado con una regresión
+
+$$y_{ij}=\alpha + \tau HopeGroup_j + X_i'\beta + \gamma D_p + \varepsilon_{i,t}$$
+donde
+
+$y_{ij}$ es la variable de impacto
+
+$HopeGroup_j$ toma el valor de uno para las socias en el grupo de tratamiento y cero para las del grupo de control
+
+$X_i$ son las características predeterminadas (ayudan a mejorar la precisión de la estimación)
+
+$D_p$ es un indicador de las parejas
+
+Los errores estándar están agrupados a nivel banco
+
+
+---
+
+# ANCOVA
+
+[McKenzie (2015)](https://www.sciencedirect.com/science/article/pii/S030438781200003X) estudia recabar y analizar datos cuando las variables de impacto no tienen una alta correlación serial
+
+Con baja correlación serial, un estimador ANCOVA incrementa la precisión (entre [otros beneficios](https://blogs.worldbank.org/impactevaluations/collecting-more-rounds-of-data-to-boost-power-the-new-stuff))
+
+En el análisis extendemos la ecuación a estimar como
+
+$$y_{ij}=\alpha + \tau HopeGroup_j + X_i'\beta + \alpha_1 y_{ij,0} + \alpha_2 My_{ij,0}+ \gamma D_p + \varepsilon_{i,t}$$
+
+donde
+
+$y_{ij,0}$ es el valor de la variable de impacto en la línea base
+
+
+$My_{ij,0}$ es igual a 1 si el valor de la variable de impacto en la línea base es faltante y cero en otro caso
+
+Los errores estándar están agrupados a nivel banco
+
+
+---
+
+# Inferencia por aleatorización
+
+Es un [método para calcular los valores $p$](https://jasonkerwin.com/nonparibus/2017/09/25/randomization-inference-vs-bootstrapping-p-values/) en una prueba de hipótesis
+
+En un experimento, sabemos qué unidades son asignadas a tratamiento y control y por medio de qué mecanismo
+
+Inferencia por aleatorización considera **qué hubiera pasado** bajo **todas** las posibles asignaciones aleatorias, no solo la que se llevó a cabo en el experimento
+
+El procedimiento se basa en la idea de que el efecto observado. $\beta_T$, puede ser debido no al tratamiento, sino simplemente a qué grupos fueron asignados a tratamiento y a control
+
+Algoritmo:
+
+2. Reasignar el tratamiento con el mismo procedimiento que como ocurrió en el experimento
+3. Reestimar $\beta_{T,s}$ con la asignación de 1
+4. Repetir 1 y 2 $S$ veces (1,000 quizás)
+5. Comparar $\beta_T$ con la distribución de los $\beta_{T,s}$ y preguntárnos, ¿qué tan común o anormal es el $\beta_T$ estimado con la muestra del experimento?
+
+---
+
+class: inverse, middle, center
+
+# 4. Resultados
+
+---
+
+# Efecto del tratamiento
+
+
+```{r}
+knitr::include_graphics("http://oaxacahope-project.weebly.com/uploads/8/0/9/9/80995658/ancova-combined_orig.png")
+```
+
+Nota: Efectos en las variables de impacto estandarizadas
+
+---
+
+# Resumen de los resultados
+
+Los datos respaldan la hipótesis de una función de utilidad que depende de las aspiraciones (ver artículo)
+
+Hay un efecto positivo del tratamiento sobre las aspiraciones en el corto plazo
+
+La agencia y las agenidas responden lentamente, pero se desplazan significativamente después de un año
+
+Hay un efecto del tratamiento sobre el índice de desempeño de negocios (explicado por el número de empleados)
+
+Hay un efecto significantivo del tratamiento en la sobrevivencia de los bancos (ver artículo)
+
+---
+
+class: inverse, middle, center
+
+# 5. Ejercicio de replicación en R
+
 ---
 
 # Paquetes que usaremos
 
 - *tidyverse*: manejo de datos
+
 - *haven*: leer datos de múltiples formatos
+
 - *sandwich*: estimación de errores robustos y agrupados
+
 - *modelsummary*: presentar resultados en tablas
+
 - *ri2*: realizar inferencia por aleatorización
+
 
 ---
 # Descripción de variables
+
+Los datos que usaremos se encuentran en el archivo *analysis_dataset.dta*
+
 
 ```{r echo=T}
 data <- haven::read_dta("data/analysis_dataset.dta")
 ```
 
----
-# Descripción de variables
-
-Consideremos la variable **age**, que indica la educación de la socia en años
+Consideremos la variable **educ**, que indica la educación de la socia en años
 
 Usando los datos de la línea base sabemos que la edad promedio de las socias es de 7.62 años
 
@@ -97,7 +470,7 @@ summary(bl$educ)
 
 Para estimar de forma consistente el efecto del tratamiento debe suceder que la asignación al tratamiento sea independiente de las características de las socias en la línea base
 
-Veamos la media de la edad de quienes recibieron y no recibieron el tratamiento
+Veamos la media de la educación de quienes recibieron y no recibieron el tratamiento
 
 ```{r echo=T}
 #Por grupos
@@ -119,23 +492,24 @@ Construimos un estadístico $t$ y formulamos una regla de decisión
 
 Si $p<\alpha=0.05$ rechazamos la $H_0$
 
-```{r echo=T}
+.scroll-output[
+
+```{r echo=T, message=F}
 t.test(educ ~ hopegroup,
        data = bl)
 ```
-
-
+]
 ---
 
 # El balance
 
 Podemos hacer uso de una regresión lineal para hacer exactamente lo mismo
 
-$$educ_i=\gamma_0 + \gamma_1 tratamiento_i + e_i$$
+$$educ_i=\gamma_0 + \gamma_1 HopeGroup_i + e_i$$
 
 ```{r echo=T}
 summary(m1 <- lm(educ ~ hopegroup,
-   data = bl))$coef
+   data = bl))$coef[,c(1:2,4)]
 ```
 
 ---
@@ -160,7 +534,7 @@ La función *lm_robust* funciona como *lm* pero podemos especificar errores agru
 summary(m1r <- lm_robust(educ ~ hopegroup,
                          clusters = communitybank,
                          se_type = "CR0",
-                         data = bl))$coef
+                         data = bl))$coef[,c(1:2,4)]
 ```
 ---
 
@@ -220,28 +594,13 @@ modelsummary::modelsummary(models,
 ```
 ---
 
-# El balance
-
-```{r echo=F}
-modelsummary::modelsummary(models,
-                           statistic = "std.error",
-                           coef_map = c('hopegroup' = "Hope Group"),
-                           coef_omit = "Intercept",
-                           gof_omit = 'DF|Deviance|R2|AIC|BIC',
-                           stars=c('*' = .1, '**' = .05, '***'=0.01),
-                           title = "Balance de X en línea base")
-
-```
-
----
-
 # El efecto del tratamiento
 
 Si el supuesto de independencia se cumple, el efecto del tratamiento en una variable $y$ puede ser identificado simplmente al comparar $y$ para tratados y no tratados **después de la intervención**
 
 Sabemos que podemos hacer esto con una regresión como sigue
 
-$$y_i=\beta_0+\beta_1 tratamiento + \varepsilon_i$$
+$$y_i=\beta_0+\beta_1 HopeGroup_i + \varepsilon_i$$
 
 donde $\hat{\beta_1}$ es el efecto del tratamiento
 
@@ -256,7 +615,7 @@ Primero estimemos una regresión con errores robustos (ignorando errores agrupad
 ```{r echo=T}
 summary(e0a <- lm_robust(StdAnderAgencyIndex ~ hopegroup,
                         se_type = "HC1",
-                        data = filter(data, t==2)))$coef[,c(1:2,4)]
+                        data = filter(data, t==2)))$coef[1:2, c(1:2,4)]
 ```
 
 El tratamiento tiene un efecto positivo de 0.14 $\sigma$ en el índice de agencia
@@ -271,14 +630,14 @@ Notemos qué pasa cuando agregamos un vector de *controles*
 
 Es común en evaluación estimar una *regresión larga*
 
-$$y_i=\beta_0+\beta_1 tratamiento + BX_i +  \varepsilon_i$$
+$$y_i=\beta_0+\beta_1 HopeGroup_i + BX_i +  \varepsilon_i$$
 
 donde $X_i$ representa un vector de características que explican $y_i$, pero que no fueron afectadas por el tratamiento
 
 ```{r echo=T}
 summary(e0b <- lm_robust(StdAnderAgencyIndex ~ hopegroup + age + educ + evangelical + children + children_under_18 + bankleader + Dwelling_Index,
                         se_type = "HC1",
-                        data = filter(data, t==2)))$coef[,c(1:2,4)]
+                        data = filter(data, t==2)))$coef[1:2,c(1:2,4)]
 ```
 ---
 
@@ -304,7 +663,7 @@ Podemos sustituir *reglarga* en la parte donde va la especificación de la regre
 summary(e1 <- lm_robust(reglarga,
                         clusters = communitybank,
                         se_type = "CR0",
-                        data = filter(data, t==2)))$coef[,c(1:2,4)]
+                        data = filter(data, t==2)))$coef[1:2,c(1:2,4)]
 
 ```
 ---
@@ -320,7 +679,7 @@ summary(e2 <- lm_robust(reglarga,
                         fixed_effects = pair_number,
                         clusters = communitybank,
                         se_type = "CR0",
-                        data = filter(data, t==2)))$coef[,c(1:2,4)]
+                        data = filter(data, t==2)))$coef[1:2,c(1:2,4)]
 ```
 
 ---
@@ -330,23 +689,6 @@ summary(e2 <- lm_robust(reglarga,
 Comparamos las estimaciones que hemos hecho hasta ahora
 
 ```{r echo=T, eval=F}
-modelsummary::modelsummary(list('Errores Robustos'=e0a,
-                                'Errores Robustos + X'=e0b,
-                                'Errores agrupados + X'=e1,
-                                'Errores agrupados + X + parejas'=e2),
-                           statistic = "std.error",
-                           coef_map = c('hopegroup' = "Hope Group"),
-                           coef_omit = "Intercept",
-                           gof_omit = 'DF|Deviance|R2|AIC|BIC',
-                           stars=c('*' = .1, '**' = .05, '***'=0.01),
-                           title = "Efectos de tratamiento en el índice de agencia 12 meses después de la intervención")
-```
-
----
-
-# El efecto del tratamiento
-
-```{r echo=F}
 modelsummary::modelsummary(list('Errores Robustos'=e0a,
                                 'Errores Robustos + X'=e0b,
                                 'Errores agrupados + X'=e1,
@@ -381,24 +723,6 @@ summary(e3 <- lm_robust(reglarga,
 
 ---
 
-# El efecto del tratamiento
-
-```{r echo=F}
-modelsummary::modelsummary(list('Errores Robustos'=e0a,
-                                'Errores Robustos + X'=e0b,
-                                'Errores agrupados + X'=e1,
-                                'Errores agrupados + X + parejas'=e2,
-                                '+ ANCOVA'=e3),
-                           statistic = "std.error",
-                           coef_map = c('hopegroup' = "Hope Group"),
-                           coef_omit = "Intercept",
-                           gof_omit = 'DF|Deviance|R2|AIC|BIC',
-                           stars=c('*' = .1, '**' = .05, '***'=0.01),
-                           title = "Efectos de tratamiento en el índice de agencia 12 meses después de la intervención")
-```
-
----
-
 # Inferencia por aleatorización
 
 Declaramos la estructura del experimento
@@ -409,8 +733,9 @@ Declaramos la estructura del experimento
 Usamos los datos del seguimiento de un año
 
 .pull-left[
-
 ```{r echo=T}
+set.seed(322)
+
 df <- filter(data, t==2)
 
 declaration <- 
@@ -424,7 +749,7 @@ declaration <-
 ]
 
 .pull-right[
-```{r echo=T}
+```{r echo=F}
 declaration
 ```
 ]
@@ -432,7 +757,8 @@ declaration
 
 # Inferencia por aleatorización
 
-.pull-left[
+La función *conduct_ri* realiza la asignación y la estimación en cada una de las $s$ repeticiones
+
 ```{r echo=T, cache=T}
 ri <- conduct_ri(
   StdAnderAgencyIndex ~ hopegroup,
@@ -442,14 +768,13 @@ ri <- conduct_ri(
   data = df,
   sims = 1000
 )
-```
-]
 
-.pull-rigth[
-```{r echo=T}
 summary(ri)
 ```
-]
+
+En el 20% de las 1,000 repeticiones el efecto estimado fue al menos tan grande como el efecto de 0.1613 con los datos del experimento
+
+El valor $p$ estimado es 0.206
 
 ---
 
@@ -457,28 +782,50 @@ summary(ri)
 
 Agregamos controles
 
-.pull-left[
 ```{r echo=T, cache=T}
 ri <- conduct_ri(
   StdAnderAgencyIndex ~ hopegroup +
   age + educ + evangelical + children + children_under_18 + bankleader + Dwelling_Index +
-  factor(pair_number) +
-  Baseline_StdAnderAgencyIndex +
-  M_Baseline_StdAnderAgencyIndex,
+  factor(pair_number) + Baseline_StdAnderAgencyIndex +M_Baseline_StdAnderAgencyIndex,
   assignment = "hopegroup",
   sharp_hypothesis = 0,
   declaration = declaration,
   data = df,
   sims = 1000
 )
-```
-]
 
-.pull-rigth[
-```{r echo=T}
 summary(ri)
 ```
-]
+
+El valor $p$ es de 0.077
+
+Esto contrasta con el valor $p$ obtenido de forma tradicional de 0.06
+
+---
+
+class: inverse, middle, center
+
+# 6. Reflexiones finales
+---
+
+# Reflexiones finales
+
+1. Conozcan su teoría
+
+2. Cosas a considerar en el diseño y la implementación
+  - Escala
+  - Ética
+  - Costo
+  - Compromiso entre las partes
+
+3. Análisis
+  - Pre registro de estudios
+  - Métodos apropiados para el diseño apropiado
+  - La econometría no resuelve un mal diseño
+
+4. Siempre habrá problemas
+
+5. Estamos para apoyar
 
 
 ---
@@ -490,11 +837,6 @@ class: center, middle, inverse
 .author[
 ### [rojasirvin.com](https://www.rojasirvin.com/) <br> [<i class="fab fa-github"></i>](https://github.com/rojasirvin) [<i class="fab fa-twitter"></i>](https://twitter.com/RojasIrvin) [<i class="ai ai-google-scholar"></i>](https://scholar.google.com/citations?user=FUwdSTMAAAAJ&hl=en)
 ]
-
-<br/>
-
-
-(Esta presentación está basada en el artículo [*Les hizo justicia la revolución*](http://rioarriba.mx/articulo.php?iden=les-hizo-justicia-la-revolucion).)
 
 <br/>
 
